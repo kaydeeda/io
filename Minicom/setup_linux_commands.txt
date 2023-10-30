@@ -1,0 +1,11 @@
+ie:
+./setup --mac xx:xx:xx:xx:xx:xx --login xxx --pw xxxx
+other options:
+--mac,
+--login,
+--pw,
+--pw-new,
+--ipacp,
+--ip,
+--netmask,
+--gateway,
