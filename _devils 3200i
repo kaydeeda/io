@@ -130,3 +130,81 @@ twi_wr_rd   TWI device wr/rd: twi_wr_rd <port ID> <address> <#read bytes> <write
 wr_8        8-bit Write: wr_8  <address> <data> [<address> <data> ...]
 wr_16       16-bit Write: wr_16 <address> <data> [<address> <data> ...]
 wr_32       32-bit Write: wr_32 <address> <data> [<address> <data> ...]
+
+
+A few interesting things, such as temp reading:
+
+Code:
+
+BlueDress.106.000 >_temp_rd
+
+  BP_1[2] = 20c
+  BP_2[3] = 19c
+  SIM0[0] = 25c
+  SIM1[1] = 25c
+  EXP0[4] = 41c
+  EXP1[5] = 45c
+
+  AVG = 29c
+
+Arbitrarily control fan speed 0-100:
+Code:
+
+BlueDress.106.000 >set_speed 20
+##if you go lower than 20%, it'll ramp back up
+##if you really want lower than 20, you need to spoof the temp with set_temp
+
+Detailed firmware version (it seems the MD firmware team is using github, or at least a build tool that defaults to owner: github):
+Code:
+
+BlueDress.106.000 >_ver
+********************* Bench Build **********************
+Build Owner   : GitHub
+Build Number  : 000
+Build Version : 106
+Build Date    : Mon Aug 24 12:28:59 2015
+FPGA Revision  : A9
+Board Revision : 8
+CPLD Revision  : 7
+**************Firmware Image Information****************
+          Image Region 0 (Always Boot)
+             Revision         : 0.0.63.0
+             Dell Version     : 1.01
+             Total Image Size : 0003d89c [252060]
+             Fast Boot        : Yes
+             Image Address    : 0x14000000
+             RegionOffset     : 0x00000000
+             RegionSize       : 0x00080000
+             RegionType       : 0x00000000
+Active--->Image Region 1
+             Revision         : 0.0.63.0
+             Dell Version     : 1.06
+             Total Image Size : 000414fc [267516]
+             Fast Boot        : Yes
+             Image Address    : 0x14080000
+             RegionOffset     : 0x00080000
+             RegionSize       : 0x00080000
+             RegionType       : 0x00000001
+          Image Region 2
+             Revision         : 0.0.63.0
+             Dell Version     : 1.06
+             Total Image Size : 000414fc [267516]
+             Fast Boot        : Yes
+             Image Address    : 0x14100000
+             RegionOffset     : 0x00100000
+             RegionSize       : 0x00080000
+             RegionType       : 0x00000002
+********************************************************
+
+The only way to update the firmware on these shelves is with a dell executable, and it will only do it if it's connected via an H800 or H810 HBA, so if you don't have one of those you were out of luck. However looking through the commands here, you can just drop it new firmware over serial via XMODEM.
+
+I think my favorite find however is this:
+Code:
+
+  BlueDress.106.000 >ps_status
+************************************************************************************
+This command has not been implemented yet.
+If you REALLY need this feature cont(r)act the Devil's firmware team for help.
+CAUTION: It may not be wise to make cont(r)act with any of the Devil's team members.
+************************************************************************************
+
