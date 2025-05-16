@@ -1,39 +1,102 @@
 # io
 export PS1="\[\e[30;42m\]\u@\h:\w\[\e[0m\]\[\e[97;44m\] \W \[\e[0m\]\ "
 
+#!/bin/bash
 
-# Reset
-RESET="\[\e[0m\]"
+# TODO: Currently, this is hardcoded. Ideally, this should be rewritten to be configurable.
 
-# Foregrounds
-FG_WHITE="\[\e[38;5;15m\]"
+function ps1_powerline {
+  RETCODE=$? # save return code
+  NUM_JOBS=$(jobs -rp | wc -l)
+  GIT_BRANCH=$(__git_ps1)
 
-# Backgrounds (vibrant)
-BG_PURPLE="\[\e[48;5;91m\]"   # Segment 1
-BG_BLUE="\[\e[48;5;33m\]"     # Segment 2
-BG_GREEN="\[\e[48;5;40m\]"    # Segment 3
-BG_GRAY="\[\e[48;5;236m\]"    # Final segment (or trailing)
+  local GREY="\[\e[48;5;240m\]\[\e[38;5;250m\]"
+  local GREY_END="\[\e[48;5;2m\]\[\e[38;5;240m\]"
 
-# Separator
-SEPARATOR=$'\uE0B0'  # Nerd Font triangle
+  local GREEN="\[\e[48;5;2m\]\[\e[38;5;255m\]"
+  local GREEN_END="\[\e[48;5;27m\]\[\e[38;5;2m\]"
 
-# Build Prompt
-PS1=""
+  local ORANGE="\[\e[48;5;208m\]\[\e[38;5;255m\]"
+  local ORANGE_END="\[\e[48;5;236m\]\[\e[38;5;208m\]"
+  local ORANGE_RET_END="\[\e[48;5;160m\]\[\e[38;5;208m\]" # when next segment is prompt with return code
 
-# Segment: Username
-PS1+="${BG_PURPLE}${FG_WHITE} \u "
-PS1+="${FG_PURPLE}${BG_BLUE}${SEPARATOR}"
+  local BLUE="\[\e[48;5;27m\]\[\e[38;5;255m\]"
+  local BLUE_END="\[\e[48;5;208m\]\[\e[38;5;27m\]"           # when next segment is git
+  local BLUE_END_JOBS="\[\e[48;5;93m\]\[\e[38;5;27m\]"       # when next segment is jobs
+  local BLUE_END_ALT="\[\e[48;5;236m\]\[\e[38;5;27m\]"       # when next segment is prompt
+  local BLUE_END_RET="\[\e[48;5;160m\]\[\e[38;5;27m\]"       # when next segment is prompt with return code
 
-# Segment: Directory
-PS1+="${BG_BLUE}${FG_WHITE} \w "
-PS1+="${FG_BLUE}${BG_GREEN}${SEPARATOR}"
+  local JOBS="\[\e[48;5;93m\]\[\e[38;5;255m\] ⏎"
+  local JOBS_END="\[\e[48;5;236m\]\[\e[38;5;93m\]"           # when next segment is prompt
+  local JOBS_NO_RET_END="\[\e[48;5;208m\]\[\e[38;5;93m\]"    # when next segment is git
+  local JOBS_NO_GIT_END="\[\e[48;5;160m\]\[\e[38;5;93m\]"    # when next segment is prompt with return code
 
-# Segment: Time
-PS1+="${BG_GREEN}${FG_WHITE} \A "
-PS1+="${FG_GREEN}${BG_GRAY}${SEPARATOR}"
+  local RET="\[\e[48;5;160m\]\[\e[38;5;255m\]"
+  local RET_END="\[\e[0m\]\[\e[38;5;160m\]\[\e[0m\] "
 
-# Segment: trailing filler (gray block)
-PS1+="${BG_GRAY} ${RESET}"
+  local PROMPT="\[\e[48;5;236m\]\[\e[38;5;255m\]"
+  local PROMPT_END="\[\e[0m\]\[\e[38;5;236m\]\[\e[0m\] "
 
-# Newline and prompt symbol
-PS1+="\n\$ "
+  if [ ! -w "$PWD" ]; then
+    # Current directory is not writable
+    BLUE_END="\[\e[48;5;160m\]\[\e[38;5;27m\]\[\e[38;5;255m\]  \[\e[48;5;208m\]\[\e[38;5;160m\]"
+    BLUE_END_JOBS="\[\e[48;5;160m\]\[\e[38;5;27m\]\[\e[38;5;255m\]  \[\e[48;5;93m\]\[\e[38;5;160m\]"
+    BLUE_END_ALT="\[\e[48;5;160m\]\[\e[38;5;27m\]\[\e[38;5;255m\]  \[\e[48;5;236m\]\[\e[38;5;160m\]"
+    BLUE_END_RET="\[\e[48;5;160m\]\[\e[38;5;27m\]\[\e[38;5;255m\]  "
+  fi
+
+  if [ -z "$GIT_BRANCH" ]; then
+    # Is not a git repo
+    if [ "$RETCODE" -eq 0 ]; then
+      if [ "$NUM_JOBS" -eq 0 ]; then
+        # No jobs or ret code
+        PS1="$GREY \t $GREY_END$GREEN @\h $GREEN_END$BLUE \W $BLUE_END_ALT$PROMPT \$ $PROMPT_END"
+      else
+        # no ret code but jobs
+        PS1="$GREY \t $GREY_END$GREEN @\h $GREEN_END$BLUE \W $BLUE_END_JOBS$JOBS$NUM_JOBS $JOBS_END$PROMPT \$ $PROMPT_END"
+      fi
+    else
+      if [ "$NUM_JOBS" -eq 0 ]; then
+        # No jobs but ret code is there
+        PS1="$GREY \t $GREY_END$GREEN @\h $GREEN_END$BLUE \W $BLUE_END_RET$RET \$ ⚑ $RETCODE $RET_END"
+      else
+        # Both jobs and ret code
+        PS1="$GREY \t $GREY_END$GREEN @\h $GREEN_END$BLUE \W $BLUE_END_JOBS$JOBS$NUM_JOBS $JOBS_NO_GIT_END$RET \$ ⚑ $RETCODE $RET_END"
+      fi
+    fi
+  else
+    # Is a git repo
+    local NUM_MODIFIED=$(git diff --name-only --diff-filter=M | wc -l)
+    local NUM_STAGED=$(git diff --staged --name-only --diff-filter=AM | wc -l)
+    local NUM_CONFLICT=$(git diff --name-only --diff-filter=U | wc -l)
+    local GIT_STATUS="\[\e[48;5;255m\]\[\e[38;5;208m\]\[\e[38;5;27m\] ✚$NUM_MODIFIED \[\e[38;5;208m\]\[\e[38;5;2m\] ✔$NUM_STAGED \[\e[38;5;208m\]\[\e[38;5;9m\] ✘$NUM_CONFLICT "
+    if [ "$RETCODE" -eq 0 ]; then
+      GIT_STATUS+="\[\e[38;5;255m\]\[\e[48;5;236m\]"
+    else
+      GIT_STATUS+="\[\e[38;5;255m\]\[\e[48;5;160m\]"
+    fi
+
+    if [ "$RETCODE" -eq 0 ]; then
+      if [ "$NUM_JOBS" -eq 0 ]; then
+        # No jobs or ret code
+        PS1="$GREY \t $GREY_END$GREEN @\h $GREEN_END$BLUE \W $BLUE_END$ORANGE $GIT_BRANCH $GIT_STATUS$PROMPT \$ $PROMPT_END"
+      else
+        # no ret code but jobs
+        PS1="$GREY \t $GREY_END$GREEN @\h $GREEN_END$BLUE \W $BLUE_END_JOBS$JOBS$NUM_JOBS $JOBS_NO_RET_END$ORANGE $GIT_BRANCH $GIT_STATUS$PROMPT \$ $PROMPT_END"
+      fi
+    else
+      if [ "$NUM_JOBS" -eq 0 ]; then
+        # No jobs but ret code is there
+        PS1="$GREY \t $GREY_END$GREEN @\h $GREEN_END$BLUE \W $BLUE_END$ORANGE $GIT_BRANCH $GIT_STATUS$RET \$ ⚑ $RETCODE $RET_END"
+      else
+        # Both jobs and ret code
+        PS1="$GREY \t $GREY_END$GREEN @\h $GREEN_END$BLUE \W $BLUE_END_JOBS$JOBS$NUM_JOBS $JOBS_NO_RET_END$ORANGE $GIT_BRANCH $GIT_STATUS$RET \$ ⚑ $RETCODE $RET_END"
+      fi
+    fi
+
+  fi
+}
+
+if [  "$TERM" != "linux" ]; then
+   PROMPT_COMMAND="ps1_powerline; $PROMPT_COMMAND"
+fi
