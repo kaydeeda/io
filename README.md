@@ -1,31 +1,37 @@
 # io
 export PS1="\[\e[30;42m\]\u@\h:\w\[\e[0m\]\[\e[97;44m\] \W \[\e[0m\]\ "
-# Colors
+# --- COLORS (VIBRANT) ---
 RESET="\[\e[0m\]"
-BOLD="\[\e[1m\]"
 
-# Foreground colors
-FG_BLACK="\[\e[30m\]"
-FG_RED="\[\e[31m\]"
-FG_GREEN="\[\e[32m\]"
-FG_YELLOW="\[\e[33m\]"
-FG_BLUE="\[\e[34m\]"
-FG_MAGENTA="\[\e[35m\]"
-FG_CYAN="\[\e[36m\]"
-FG_WHITE="\[\e[37m\]"
+# Foreground
+FG_BLACK="\[\e[38;5;16m\]"
+FG_WHITE="\[\e[38;5;15m\]"
 
-# Background colors
-BG_BLACK="\[\e[40m\]"
-BG_RED="\[\e[41m\]"
-BG_GREEN="\[\e[42m\]"
-BG_YELLOW="\[\e[43m\]"
-BG_BLUE="\[\e[44m\]"
-BG_MAGENTA="\[\e[45m\]"
-BG_CYAN="\[\e[46m\]"
-BG_WHITE="\[\e[47m\]"
+# Backgrounds (Vibrant 256-color)
+BG_PURPLE="\[\e[48;5;91m\]"   # Bright magenta
+BG_BLUE="\[\e[48;5;33m\]"     # Vivid blue
+BG_GREEN="\[\e[48;5;40m\]"    # Bright green
+BG_YELLOW="\[\e[48;5;220m\]"  # Vivid yellow
+BG_RED="\[\e[48;5;196m\]"     # Bright red
+BG_CYAN="\[\e[48;5;51m\]"     # Bright cyan
 
-# Powerline separator glyph
-SEPARATOR=$'\uE0B0'  # Try '\u25B6' if this doesn't work in your terminal
+# Separator
+SEPARATOR=$'\uE0B0'  # Nerd Font Powerline glyph
 
 # Prompt structure
-PS1="${BG_BLUE}${FG_WHITE} \u ${RESET}${BG_CYAN}${FG_BLUE}${SEPARATOR}${BG_CYAN}${FG_WHITE} \w ${RESET}${FG_CYAN}${SEPARATOR} ${RESET}\n\$ "
+PS1=""
+
+# Username segment
+PS1+="${BG_PURPLE}${FG_WHITE} \u ${RESET}"
+PS1+="${BG_BLUE}${FG_PURPLE}${SEPARATOR}"
+
+# Directory segment
+PS1+="${BG_BLUE}${FG_WHITE} \w ${RESET}"
+PS1+="${BG_GREEN}${FG_BLUE}${SEPARATOR}"
+
+# Time segment
+PS1+="${BG_GREEN}${FG_WHITE} \A ${RESET}"
+PS1+="${FG_GREEN}${SEPARATOR} ${RESET}"
+
+# Newline and symbol
+PS1+="\n\$ "
